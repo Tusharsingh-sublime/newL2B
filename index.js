@@ -1,8 +1,9 @@
-const express = require('express');
+const express = require("express");
+const connected = require("./src/config/connection");
 const app = express();
-
-app.get('/', (req, res) => {
-  res.send('Hello, Node.js!');
+connected();
+app.get("/", (req, res) => {
+  res.send("Hello, Node.js!");
 });
 
 const PORT = 3000;
