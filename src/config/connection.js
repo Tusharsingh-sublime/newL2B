@@ -6,10 +6,10 @@ const uri = 'mongodb://localhost:27017/newL2B'; // Change "mydatabase" to your d
 const connectDB = async () => {
     try {
         await mongoose.connect(uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            useCreateIndex: true,
-            useFindAndModify: false,
+            // useNewUrlParser: true,
+            // useUnifiedTopology: true,
+            // useCreateIndex: true,
+            // useFindAndModify: false,
           });
       console.log('MongoDB connected successfully');
     } catch (error) {
