@@ -1,0 +1,249 @@
+const { User } = require("../../../models/schema");
+const bcrypt = require("bcrypt");
+
+module.exports = {
+  // Add User
+  addUser: async (req, res) => {
+    const {
+      username,
+      fullName,
+      password,
+      mobile,
+      email,
+      branch,
+      role,
+      Roles,
+      gender,
+    } = req.body;
+
+    if (
+      !username ||
+      !fullName ||
+      !password ||
+      !mobile ||
+      !email ||
+      !branch ||
+      !Roles ||
+      !gender
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required.",
+      });
+    }
+
+    try {
+      const existingUser = await User.findOne({ email });
+      const existingAdmin = await Admin.findOne({ email });
+      if (existingUser || existingAdmin) {
+        return res.status(409).json({
+          success: false,
+          message: "Email already exists.",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser = new User({
+        username,
+        fullName,
+        password: hashedPassword,
+        mobile,
+        email,
+        branch,
+        role,
+        Roles,
+        gender,
+      });
+
+      await newUser.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "User added successfully.",
+        user: {
+          id: newUser._id,
+          username: newUser.username,
+          fullName: newUser.fullName,
+          email: newUser.email,
+        },
+      });
+    } catch (error) {
+      console.error("Error occurred while adding user:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error.",
+        error: error.message,
+      });
+    }
+  },
+
+  // Update User
+  updateUser: async (req, res) => {
+    const { id } = req.params;
+    const updateFields = req.body;
+
+    try {
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found.",
+        });
+      }
+
+      if (updateFields.password) {
+        updateFields.password = await bcrypt.hash(updateFields.password, 10);
+      }
+
+      Object.assign(user, updateFields); // Merge updateFields into user object
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "User updated successfully.",
+        user,
+      });
+    } catch (error) {
+      console.error("Error occurred while updating user:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error.",
+        error: error.message,
+      });
+    }
+  },
+
+  // Delete User
+  deleteUser: async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found.",
+        });
+      }
+
+      await User.findByIdAndDelete(id);
+
+      return res.status(200).json({
+        success: true,
+        message: "User deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error occurred while deleting user:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error.",
+        error: error.message,
+      });
+    }
+  },
+
+  // List All Users
+  listUsers: async (req, res) => {
+    try {
+      let matchData = { isActive: true }; // Initial filter to get only active users
+
+      // Apply optional filters based on query parameters
+      if (req.query.username) {
+        matchData.username = { $regex: req.query.username, $options: "i" }; // Case-insensitive partial match
+      }
+
+      if (req.query.fullName) {
+        matchData.fullName = { $regex: req.query.fullName, $options: "i" };
+      }
+
+      if (req.query.email) {
+        matchData.email = { $regex: req.query.email, $options: "i" };
+      }
+
+      if (req.query.mobile) {
+        matchData.mobile = { $regex: req.query.mobile, $options: "i" };
+      }
+
+      if (req.query.gender) {
+        const validGenders = ["male", "female", "other"];
+        if (validGenders.includes(req.query.gender.toLowerCase())) {
+          matchData.gender = req.query.gender.toLowerCase();
+        }
+      }
+
+      if (req.query.branch) {
+        matchData.branch = { $regex: req.query.branch, $options: "i" };
+      }
+
+      if (req.query.roles) {
+        matchData.Roles = { $regex: req.query.roles, $options: "i" };
+      }
+
+      // Filter by date range (createdAt)
+      if (req.query.startDate || req.query.endDate) {
+        matchData.createdAt = {};
+        if (req.query.startDate) {
+          matchData.createdAt.$gte = new Date(req.query.startDate);
+        }
+        if (req.query.endDate) {
+          matchData.createdAt.$lte = new Date(req.query.endDate);
+        }
+      }
+
+      let pageNo = 0;
+      let limit = 10;
+
+      // Validate and apply pagination
+      if (req.query.pageNo !== undefined) {
+        if (
+          !Number.isInteger(Number(req.query.pageNo)) ||
+          Number(req.query.pageNo) < 0
+        ) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid pageNo passed" });
+        } else {
+          pageNo = Number(req.query.pageNo);
+        }
+      }
+
+      if (req.query.limit !== undefined) {
+        if (
+          !Number.isInteger(Number(req.query.limit)) ||
+          Number(req.query.limit) < 0
+        ) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid limit passed" });
+        } else {
+          limit = Number(req.query.limit);
+        }
+      }
+
+      // Perform the query with filtering, pagination, and excluding the password field
+      const users = await User.find(matchData)
+        .select("-password") // Exclude password from the response
+        .skip(pageNo * limit)
+        .limit(limit)
+        .sort({ createdAt: -1 }); // Sort by created date (most recent first)
+
+      // Get the total count of matched records for pagination
+      const totalRecords = await User.countDocuments(matchData);
+
+      return res.status(200).json({
+        success: true,
+        message: "Users fetched successfully",
+        data: users,
+        totalRecords,
+      });
+    } catch (error) {
+      console.error("Error occurred while listing users:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error.",
+        error: error.message,
+      });
+    }
+  },
+};
