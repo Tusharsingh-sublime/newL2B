@@ -1,4 +1,4 @@
-const { User } = require("../../../models/schema");
+const { User, Admin } = require("../../../models/schema");
 const bcrypt = require("bcrypt");
 
 module.exports = {
@@ -69,7 +69,7 @@ module.exports = {
         },
       });
     } catch (error) {
-      console.error("Error occurred while adding user:", error.message);
+      // console.error("Error occurred while adding user:", error.message);
       return res.status(500).json({
         success: false,
         message: "Internal server error.",
@@ -80,11 +80,11 @@ module.exports = {
 
   // Update User
   updateUser: async (req, res) => {
-    const { id } = req.params;
+    const { email } = req.body; // Expecting email from the request parameters
     const updateFields = req.body;
 
     try {
-      const user = await User.findById(id);
+      const user = await User.findOne({ email }); // Find user by email
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -92,12 +92,14 @@ module.exports = {
         });
       }
 
+      // If password is being updated, hash it
       if (updateFields.password) {
         updateFields.password = await bcrypt.hash(updateFields.password, 10);
       }
 
-      Object.assign(user, updateFields); // Merge updateFields into user object
-      await user.save();
+      // Merge updateFields into the user object
+      Object.assign(user, updateFields);
+      await user.save(); // Save updated user document
 
       return res.status(200).json({
         success: true,
@@ -239,6 +241,43 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error occurred while listing users:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error.",
+        error: error.message,
+      });
+    }
+  },
+  listTargets: async (req, res) => {
+    try {
+      const currentDate = new Date();
+
+      // Fetch all users without filters
+      const users = await User.find()
+        .select("-password")
+        .sort({ createdAt: -1 });
+
+      // Add RemainsDays for each user
+      const usersWithRemainsDays = users.map((user) => {
+        let remainsDays = null;
+        if (user.dueDate) {
+          remainsDays = Math.ceil(
+            (user.dueDate - currentDate) / (1000 * 60 * 60 * 24)
+          ); // Calculate difference in days
+        }
+        return {
+          ...user.toObject(), // Convert Mongoose document to plain object
+          RemainsDays: remainsDays,
+        };
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "All users fetched successfully",
+        data: usersWithRemainsDays,
+      });
+    } catch (error) {
+      console.error("Error occurred while fetching users:", error.message);
       return res.status(500).json({
         success: false,
         message: "Internal server error.",
