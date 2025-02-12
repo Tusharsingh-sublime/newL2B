@@ -118,19 +118,21 @@ module.exports = {
 
   // Delete User
   deleteUser: async (req, res) => {
-    const { id } = req.params;
-
+    const { email } = req.query;
+  
     try {
-      const user = await User.findById(id);
+      // Find the user by email
+      const user = await User.findOne({ email }); // Use findOne instead of find
       if (!user) {
         return res.status(404).json({
           success: false,
           message: "User not found.",
         });
       }
-
-      await User.findByIdAndDelete(id);
-
+  
+      // Delete the user by its ID
+      await User.findByIdAndDelete(user._id); // Use user._id from the found document
+  
       return res.status(200).json({
         success: true,
         message: "User deleted successfully.",
@@ -144,6 +146,7 @@ module.exports = {
       });
     }
   },
+  
 
   // List All Users
   listUsers: async (req, res) => {
@@ -178,8 +181,8 @@ module.exports = {
         matchData.branch = { $regex: req.query.branch, $options: "i" };
       }
 
-      if (req.query.roles) {
-        matchData.Roles = { $regex: req.query.roles, $options: "i" };
+      if (req.query.Roles) {
+        matchData.Roles = { $regex: req.query.Roles, $options: "i" };
       }
 
       // Filter by date range (createdAt)
@@ -230,7 +233,6 @@ module.exports = {
         .limit(limit)
         .sort({ createdAt: -1 }); // Sort by created date (most recent first)
 
-      // Get the total count of matched records for pagination
       const totalRecords = await User.countDocuments(matchData);
 
       return res.status(200).json({
