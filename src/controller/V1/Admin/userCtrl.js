@@ -250,10 +250,35 @@ module.exports = {
   },
   listTargets: async (req, res) => {
     try {
+      const { fromDate, toDate, branch } = req.query; // Get fromDate, toDate, and branch from query params
       const currentDate = new Date();
+      let query = {}; // Initialize the query object
 
-      // Fetch all users without filters
-      const users = await User.find()
+      // If fromDate and toDate are provided, add a filter for createdAt
+      if (fromDate && toDate) {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+
+        // Validate the date formats
+        if (isNaN(from) || isNaN(to)) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Invalid date format. Please provide valid fromDate and toDate in YYYY-MM-DD format.",
+          });
+        }
+
+        to.setHours(23, 59, 59, 999);
+
+        // Add the createdAt filter to the query
+        query.createdAt = { $gte: from, $lte: to };
+      }
+
+      if (branch) {
+        query.branch = branch;
+      }
+
+      const users = await User.find(query)
         .select("-password")
         .sort({ createdAt: -1 });
 
@@ -263,17 +288,89 @@ module.exports = {
         if (user.dueDate) {
           remainsDays = Math.ceil(
             (user.dueDate - currentDate) / (1000 * 60 * 60 * 24)
-          ); // Calculate difference in days
+          );
         }
         return {
-          ...user.toObject(), // Convert Mongoose document to plain object
+          ...user.toObject(),
+          RemainsDays: remainsDays,
+        };
+      });
+
+      // Respond with the filtered or full data
+      return res.status(200).json({
+        success: true,
+        message:
+          fromDate && toDate && branch
+            ? "Filtered users fetched successfully (by date and branch)"
+            : fromDate && toDate
+            ? "Filtered users fetched successfully (by date)"
+            : branch
+            ? "Filtered users fetched successfully (by branch)"
+            : "All users fetched successfully",
+        data: usersWithRemainsDays,
+      });
+    } catch (error) {
+      console.error("Error occurred while fetching users:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error.",
+        error: error.message,
+      });
+    }
+  },
+  listTragetsDateWise: async (req, res) => {
+    try {
+      const { fromDate, toDate } = req.query; // Get fromDate and toDate from query params
+
+      if (!fromDate || !toDate) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please provide both fromDate and toDate in the query parameters.",
+        });
+      }
+
+      const from = new Date(fromDate);
+      const to = new Date(toDate);
+
+      // Validate the date formats
+      if (isNaN(from) || isNaN(to)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid date format. Please provide valid fromDate and toDate in YYYY-MM-DD format.",
+        });
+      }
+
+      // Ensure 'to' date includes the entire day
+      to.setHours(23, 59, 59, 999);
+
+      // Fetch users within the specified date range
+      const users = await User.find({
+        createdAt: { $gte: from, $lte: to },
+      })
+        .select("-password")
+        .sort({ createdAt: -1 });
+
+      const currentDate = new Date();
+
+      // Add RemainsDays for each user
+      const usersWithRemainsDays = users.map((user) => {
+        let remainsDays = null;
+        if (user.dueDate) {
+          remainsDays = Math.ceil(
+            (user.dueDate - currentDate) / (1000 * 60 * 60 * 24)
+          );
+        }
+        return {
+          ...user.toObject(),
           RemainsDays: remainsDays,
         };
       });
 
       return res.status(200).json({
         success: true,
-        message: "All users fetched successfully",
+        message: "Filtered users fetched successfully",
         data: usersWithRemainsDays,
       });
     } catch (error) {

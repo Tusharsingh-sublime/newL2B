@@ -8,5 +8,6 @@ router.delete("/delete", User.deleteUser);
 router.post("/update", User.updateUser);
 router.get("/list", User.listUsers);
 router.get("/targetList", User.listTargets);
+router.get("/targetDtWise", User.listTragetsDateWise);
 
 module.exports = router;
