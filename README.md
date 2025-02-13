@@ -29,46 +29,46 @@ The Lead Management System is a Node.js-based application designed to help admin
 
 ```bash
 .
-├── node_modules
-├── src
-│   ├── config
-│   │   ├── auth.js
-│   │   └── connection.js
-│   ├── controller
-│   │   └── V1
-│   │       └── Admin
-│   │           ├── loginCtrl.js
-│   │           └── userCtrl.js
-│   ├── helper
-│   │   ├── cache.js
-│   │   ├── comman_helper.js
-│   │   ├── counter.js
-│   │   ├── htmlTopdfConverter.js
-│   │   ├── lead2business-555f4-32e03cf28223.json
-│   │   ├── leadsparrow-e4b97-firebase-adminsdk.json
-│   │   ├── loggerService.js
-│   │   ├── security.js
-│   │   ├── taskHelperFunc.js
-│   │   └── validate.js
-│   ├── models
-│   │   └── schema.js
-│   └── routes
-│       └── V1
-│           └── Admin
-│               ├── loginRouter.js
-│               └── userRouter.js
-├── .env
-├── index.js
-├── package.json
-├── package-lock.json
-└── README.md
+├── 📂 node_modules
+├── 📦src
+│   ├── 📂 config
+│   │   ├── 📜 auth.js
+│   │   └── 📜 connection.js
+│   ├── 📂 controller
+│   │   └── 📂 V1
+│   │       └── 📂 Admin
+│   │           ├── 📜 loginCtrl.js
+│   │           └── 📜 userCtrl.js
+│   ├── 📂 helper
+│   │   ├── 📜 cache.js
+│   │   ├── 📜 comman_helper.js
+│   │   ├── 📜 counter.js
+│   │   ├── 📜 htmlTopdfConverter.js
+│   │   ├── 📜 lead2business-555f4-32e03cf28223.json
+│   │   ├── 📜 leadsparrow-e4b97-firebase-adminsdk.json
+│   │   ├── 📜 loggerService.js
+│   │   ├── 📜 security.js
+│   │   ├── 📜 taskHelperFunc.js
+│   │   └── 📜 validate.js
+│   ├── 📂 models
+│   │   └── 📜 schema.js
+│   └── 📂 routes
+│       └── 📂 V1
+│           └── 📂 Admin
+│               ├── 📜 loginRouter.js
+│               └── 📜 userRouter.js
+├── 📜 .env
+├── 📜 index.js
+├── 📜 package.json
+├── 📜 package-lock.json
+└── 📜 README.md
 ```
 
 </br>
 
 ## Technologies Used
 
-- Backend Framework: Node.js
+- Backend : Node.js with Express.js
 - Database:MongoDB
 - Authentication: JWT
 
@@ -78,7 +78,7 @@ The Lead Management System is a Node.js-based application designed to help admin
 
 ### **1. Admin Schema**
 
-The Admin schema represents the administrator of the system responsible for managing users, targets, and system settings.
+The Admin schema represents the administrator of the system, responsible for managing users, targets, adding leads, and taking follow-ups.
 
 #### Admin Schema Fields
 
@@ -92,7 +92,7 @@ The Admin schema represents the administrator of the system responsible for mana
 
 ### **2. User Schema**
 
-The User schema represents the end-user responsible for managing leads and tracking targets. Each user is linked to specific business roles.
+The User schema represents the end-user responsible for managing leads and Follow ups. Each user is linked to specific business roles.
 
 #### User Schema Fields
 
@@ -120,12 +120,12 @@ The User schema represents the end-user responsible for managing leads and track
 
 undefined
 
-## End-point: instert
+## End-point: admin/add
 
 ### Method: POST
 
 > ```
-> http://localhost:3000/api/admin/add
+> http://localhost:3000/api/v1/admin/add
 > ```
 
 ### Body (**raw**)
@@ -144,12 +144,12 @@ undefined
 
 ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃ ⁃
 
-## End-point: Login
+## End-point: admin/login
 
 ### Method: POST
 
 > ```
-> http://localhost:3000/api/admin/login
+> http://localhost:3000/api/v1/admin/login
 > ```
 
 ### Body (**raw**)
@@ -172,7 +172,7 @@ undefined
 ### Method: POST
 
 > ```
-> http://localhost:3000/api/user/add
+> http://localhost:3000/api/v1/user/add
 > ```
 
 ### Body (**raw**)
@@ -196,13 +196,13 @@ undefined
 ### Method: Delete
 
 > ```
-> http://localhost:3000/api/user/delete
+> http://localhost:3000/api/v1/user/delete
 > ```
 
 ### Query
 
 > ```
-> http://localhost:3000/api/user/delete?email=example@example.com
+> http://localhost:3000/api/v1/user/delete?email=example@example.com
 > ```
 
 ## End-point: user/update
@@ -210,7 +210,7 @@ undefined
 ### Method: Post
 
 > ```
-> http://localhost:3000/api/user/update
+> http://localhost:3000/api/v1/user/update
 > ```
 
 ### Body (**raw**)
@@ -234,7 +234,7 @@ undefined
 ### Method: Get (With all filtration according to figma )
 
 > ```
-> http://localhost:3000/api/user/list
+> http://localhost:3000/api/v1/user/list
 > ```
 
 ### Query Params
@@ -258,7 +258,7 @@ undefined
 ### Method: Get (With all filtration according to figma )
 
 > ```
-> http://localhost:3000/api/user/targetList
+> http://localhost:3000/api/v1/user/targetList
 > ```
 
 ### Query Params
@@ -274,7 +274,6 @@ undefined
 | Name   | Start Date | End Date |
 | :----- | ---------- | -------: |
 | Tushar | date       |     date |
-| PQR    | date       |     date |
 
 ## Installation and Setup
 
@@ -297,9 +296,24 @@ npm install
 npm run dev
 ```
 
+## Environment Variables
+
+```bash
+PORT=3000
+DB_HOST=localhost
+DB_PORT=27017
+DB_NAME=newL2B
+JWT_SECRET=your_jwt_secret
+
+```
+
 ## Authentication & Security
 
 - Use JWT for authentication
 - Passwords are hashed using bcrypt
 - Implement role-based access control
 
+## Error Handling
+
+- Return consistent error responses in JSON format
+  </br>
