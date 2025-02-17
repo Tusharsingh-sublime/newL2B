@@ -4,11 +4,16 @@ const { Admin, User } = require("../../../models/schema");
 module.exports = {
   // Add User (Admin or User)
   addUser: async (req, res) => {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role, adminId } = req.body;
 
-    console.log("Request received to add user:", { username, email, role });
+    console.log("Request received to add user:", {
+      username,
+      email,
+      role,
+      adminId,
+    });
 
-    if (!username || !email || !password || !role) {
+    if (!username || !email || !password || !role || !adminId) {
       //   console.log("Validation failed: Missing fields");
       return res
         .status(400)
@@ -16,7 +21,7 @@ module.exports = {
     }
 
     if (!["admin", "user"].includes(role)) {
-      console.log("Validation failed: Invalid role", role);
+      // console.log("Validation failed: Invalid role", role);
       return res.status(400).json({
         success: false,
         message: "Invalid role. Role must be 'admin' or 'user'.",
@@ -38,11 +43,12 @@ module.exports = {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       //   console.log("Creating new user in the database...");
-      const newUser = new ad({
+      const newUser = new Admin({
         username,
         email,
         password: hashedPassword,
         role,
+        adminId,
       });
 
       await newUser.save();

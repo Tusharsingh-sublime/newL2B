@@ -5,25 +5,28 @@ module.exports = {
   // Add User
   addUser: async (req, res) => {
     const {
+      adminId, // Required to associate user with an admin
       username,
       fullName,
       password,
       mobile,
       email,
       branch,
-      role,
-      Roles,
       gender,
+      targetNo,
+      startDate,
+      dueDate,
     } = req.body;
 
+    // Validate required fields
     if (
+      !adminId ||
       !username ||
       !fullName ||
       !password ||
       !mobile ||
       !email ||
       !branch ||
-      !Roles ||
       !gender
     ) {
       return res.status(400).json({
@@ -33,29 +36,46 @@ module.exports = {
     }
 
     try {
+      // Ensure the given `adminId` exists
+      const adminExists = await Admin.findOne({ adminId });
+      if (!adminExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Admin not found.",
+        });
+      }
+
+      // Check if user already exists by email
       const existingUser = await User.findOne({ email });
-      const existingAdmin = await Admin.findOne({ email });
-      if (existingUser || existingAdmin) {
+      if (existingUser) {
         return res.status(409).json({
           success: false,
           message: "Email already exists.",
         });
       }
 
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // Create new user
       const newUser = new User({
+        adminId,
         username,
         fullName,
         password: hashedPassword,
         mobile,
         email,
         branch,
-        role,
-        Roles,
+        role: "user", // Ensuring role is set correctly
         gender,
+        isActive: true, // Default value
+        assignedDate: new Date(), // Optional: Set current date if needed
+        targetNo,
+        startDate,
+        dueDate,
       });
 
+      // Save user to database
       await newUser.save();
 
       return res.status(201).json({
@@ -66,10 +86,10 @@ module.exports = {
           username: newUser.username,
           fullName: newUser.fullName,
           email: newUser.email,
+          adminId: newUser.adminId,
         },
       });
     } catch (error) {
-      // console.error("Error occurred while adding user:", error.message);
       return res.status(500).json({
         success: false,
         message: "Internal server error.",
@@ -80,11 +100,17 @@ module.exports = {
 
   // Update User
   updateUser: async (req, res) => {
-    const { email } = req.body; // Expecting email from the request parameters
+    const { adminId, email } = req.body; // Expecting email from the request parameters
     const updateFields = req.body;
 
+    if (!adminId) {
+      return res.status(400).json({
+        success: false,
+        message: "adminId is required to update a user.",
+      });
+    }
     try {
-      const user = await User.findOne({ email }); // Find user by email
+      const user = await User.findOne({ email, adminId }); // Find user by email
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -118,21 +144,27 @@ module.exports = {
 
   // Delete User
   deleteUser: async (req, res) => {
-    const { email } = req.query;
-  
+    const { adminId, email } = req.query;
+
+    if (!adminId) {
+      return res.status(400).json({
+        success: false,
+        message: "adminId is required to update a user.",
+      });
+    }
     try {
       // Find the user by email
-      const user = await User.findOne({ email }); // Use findOne instead of find
+      const user = await User.findOne({ email, adminId }); // Use findOne instead of find
       if (!user) {
         return res.status(404).json({
           success: false,
           message: "User not found.",
         });
       }
-  
+
       // Delete the user by its ID
       await User.findByIdAndDelete(user._id); // Use user._id from the found document
-  
+
       return res.status(200).json({
         success: true,
         message: "User deleted successfully.",
@@ -146,13 +178,19 @@ module.exports = {
       });
     }
   },
-  
 
   // List All Users
   listUsers: async (req, res) => {
     try {
       let matchData = { isActive: true }; // Initial filter to get only active users
-
+      const adminId = req.query.adminId; // If using JWT, get adminId from req.user.adminId
+      if (!adminId) {
+        return res.status(400).json({
+          success: false,
+          message: "adminId is required to fetch users.",
+        });
+      }
+      matchData.adminId = adminId;
       // Apply optional filters based on query parameters
       if (req.query.username) {
         matchData.username = { $regex: req.query.username, $options: "i" }; // Case-insensitive partial match
