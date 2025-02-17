@@ -30,15 +30,17 @@ The Lead Management System is a Node.js-based application designed to help admin
 ```bash
 .
 ├── 📂 node_modules
-├── 📦src
+├── 📦 src
 │   ├── 📂 config
 │   │   ├── 📜 auth.js
-│   │   └── 📜 connection.js
+│   │   ├── 📜 connection.js
 │   ├── 📂 controller
 │   │   └── 📂 V1
 │   │       └── 📂 Admin
+│   │           ├── 📜 followupCtrl.js
+│   │           ├── 📜 leadsCtrl.js
 │   │           ├── 📜 loginCtrl.js
-│   │           └── 📜 userCtrl.js
+│   │           ├── 📜 userCtrl.js
 │   ├── 📂 helper
 │   │   ├── 📜 cache.js
 │   │   ├── 📜 comman_helper.js
@@ -49,19 +51,22 @@ The Lead Management System is a Node.js-based application designed to help admin
 │   │   ├── 📜 loggerService.js
 │   │   ├── 📜 security.js
 │   │   ├── 📜 taskHelperFunc.js
-│   │   └── 📜 validate.js
+│   │   ├── 📜 validate.js
 │   ├── 📂 models
-│   │   └── 📜 schema.js
-│   └── 📂 routes
-│       └── 📂 V1
-│           └── 📂 Admin
-│               ├── 📜 loginRouter.js
-│               └── 📜 userRouter.js
+│   │   ├── 📜 schema.js
+│   ├── 📂 routes
+│   │   └── 📂 V1
+│   │       └── 📂 Admin
+│   │           ├── 📜 followUp.js
+│   │           ├── 📜 leadsRouter.js
+│   │           ├── 📜 loginRouter.js
+│   │           ├── 📜 userRouter.js
 ├── 📜 .env
 ├── 📜 index.js
 ├── 📜 package.json
 ├── 📜 package-lock.json
 └── 📜 README.md
+
 ```
 
 </br>
@@ -111,6 +116,31 @@ The User schema represents the end-user responsible for managing leads and Follo
 - targetNo: (Number) – Number of leads or tasks assigned as a target.
 - startDate: (Date) – Target start date.
 - dueDate: (Date) – Target due date.
+
+#### Leads Schema Fields
+
+- username: (String) Required, References User – Specifies the username of the user who owns the lead.
+- fullName: (String) Required – Full name of the lead.
+- leadsType: (String) Required – Specifies the type of lead (e.g., Business, Personal, etc.).
+- mobile: (String) Required – Lead's contact mobile number.
+- email: (String) Required – Lead's email address.
+- address: (String) Required – Residential or business address of the lead.
+- companyName: (String) – Name of the company associated with the lead (if applicable).
+- companyAddress: (String) – Address of the lead’s company (if applicable).
+- followUps: (Array of ObjectId) References FollowUp – Stores the list of follow-ups linked to this lead.
+- createdAt: (Date) Default: Date.now – Timestamp when the lead was created.
+
+#### Follow-Up schema Fields
+
+- lead: (ObjectId) Required, References Leads – The lead to which this follow-up belongs.
+- followUpType: (String) Required – Type of follow-up (e.g., Call, Meeting, Email).
+- followUpdate: (Date) Required – Date when the follow-up is scheduled or happened.
+- followUpTime: (String) – Time of the follow-up (stored as string, e.g., "10:30 AM").
+- feedback: (String) – Notes or remarks given after the follow-up.
+- referralName: (String) – Name of the person who referred the lead (if any).
+- referralmobile: (String) – Mobile number of the referral person.
+- referralNote: (String) – Additional notes about the referral.
+- createdAt: (Date) Default: Date.now – Timestamp of when the follow-up entry was created.
 
 # API Documentation
 
